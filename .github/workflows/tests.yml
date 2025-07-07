@@ -1,0 +1,46 @@
+name: tests
+on:
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  changes:
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release)') }}
+    runs-on: ubuntu-latest
+    outputs:
+      templates: ${{ steps.filter.outputs.changes }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          list-files: json
+          filters: |
+            rust-studio: 
+              - './**/rust-studio/**'
+
+  smoke:
+    needs: changes
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release)') && needs.changes.outputs.templates != '[]' }}
+    strategy:
+      matrix:
+        templates: ${{ fromJSON(needs.changes.outputs.templates) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v3
+
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+
+      - name: Smoke test for '${{ matrix.templates }}'
+        id: smoke-test
+        uses: ./.github/actions/smoke-test
+        with:
+          template: "${{ matrix.templates }}"

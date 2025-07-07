@@ -1,0 +1,26 @@
+{
+    "id": "rust-studio",
+    "version": "1.0.0",
+    "name": "Rust Studio",
+    "description": "A Android Studio SDK, Dart & TypeScript on Rust Template",
+    "documentationURL": "https://github.com/groupe-carvi/devcontainers/tree/main/src/rust-studio",
+    "licenseURL": "https://github.com/groupe-carvi/devcontainers/blob/main/LICENSE",
+    "options": {
+        "distro": {
+            "type": "string",
+            "description": "Ubuntu/Debian version",
+            "proposals": [
+                "jammy",
+                "focal",
+                "bionic",
+                "trixie",
+                "bookworm",
+                "bullseye"
+            ],
+            "default": "bookworm"
+        }
+    },
+    "platforms": [
+        "Any"
+    ]
+}

@@ -1,0 +1,56 @@
+name: docs
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  generate:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: documentation
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Generate Documentation
+        uses: devcontainers/action@v1
+        with:
+          generate-docs: true
+          base-path-to-templates: ./src
+
+      - name: Create Documentation
+        id: docs
+        run: |
+          set -e
+          echo "Start."
+
+          # Configure git and Push updates
+          git config --global user.email github-actions@github.com
+          git config --global user.name github-actions
+          git config pull.rebase false
+
+          branch=automated-documentation-update-$GITHUB_RUN_ID
+          git checkout -b $branch
+          message='Automated documentation update'
+
+          # Add / update and commit
+          git add */**/README.md
+          git commit -m 'Automated documentation update [skip ci]' || export NO_UPDATES=true
+
+          # Push
+          if [ "$NO_UPDATES" != "true" ] ; then
+              git push origin "$branch"
+              gh api \
+                --method POST \
+                -H "Accept: application/vnd.github+json" \
+                /repos/${GITHUB_REPOSITORY}/pulls \
+                -f title="$message" \
+              -f body="$message" \
+              -f head="$branch" \
+              -f base='main'
+          fi

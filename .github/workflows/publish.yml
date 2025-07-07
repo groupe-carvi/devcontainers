@@ -1,0 +1,30 @@
+name: publish
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  publish:
+    if: github.event.pull_request.merged == true
+    permissions:
+      packages: write
+      contents: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: ubuntu-latest
+            shell: bash
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Publish Templates
+        uses: devcontainers/action@v1
+        with:
+          publish-templates: true
+          base-path-to-templates: ./src
+
